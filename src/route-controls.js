@@ -35,13 +35,16 @@ class RouteControls extends MicrodropAsync.MqttClient {
 
     const microdrop = new MicrodropAsync();
     const group = this.electrodeControls.svgGroup;
-    const absoluteRoutes =  await microdrop.device.electrodesFromPath(routes);
+    const electrodes =  await microdrop.device.electrodesFromRoutes(routes);
 
     // Reset all lines to not visited
     _.each(this.lines, (l)=>{l.visited = false});
 
     // Iterate through all routes
-    for (const [uuid, route] of Object.entries(absoluteRoutes)) {
+    for (const [i, sequence] of electrodes.entries()) {
+      const uuid = sequence.uuid;
+      const ids = sequence.ids;
+
       // If line already exists for route, visit and then continue
       if (this.lines[uuid]) {
         this.lines[uuid].visited = true;
@@ -49,7 +52,7 @@ class RouteControls extends MicrodropAsync.MqttClient {
       };
 
       // Otherwise get the electrodeIds from the route, and draw a new line
-      const line = GenerateLinesFromIds(absoluteRoutes[uuid], group);
+      const line = GenerateLinesFromIds(ids, group);
       this.scene.add(line);
       line.visited = true;
       line.uuid = uuid;
@@ -99,7 +102,7 @@ class RouteControls extends MicrodropAsync.MqttClient {
     const lineWidth = 0.3;
     const microdrop = new MicrodropAsync();
     const routes = await microdrop.routes.routes();
-    const absoluteRoutes = await microdrop.device.electrodesFromPath(routes);
+    const absoluteRoutes = await microdrop.device.electrodesFromRoutes(routes);
 
     const selectedRoutes = [];
 
@@ -111,10 +114,11 @@ class RouteControls extends MicrodropAsync.MqttClient {
     }
 
     // Check which routes contain the id selected
-    for (const [uuid, absoluteRoute] of Object.entries(absoluteRoutes)){
-      const selected = _.includes(absoluteRoute, id);
+    for (const [i, electrodes] of absoluteRoutes.entries()){
+      const selected = _.includes(electrodes.ids, id);
+      const uuid = electrodes.uuid;
       if (selected)
-        selectedRoutes.push(routes[uuid]);
+        selectedRoutes.push(_.find(routes, {uuid}));
     }
 
     // Turn selected routes yellow
