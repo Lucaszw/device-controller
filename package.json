@@ -9,13 +9,14 @@
     "build-dev": "npm run-script build-microdrop-async && npm run-script link-packages && webpack",
     "link-packages": "npm ln ../microdrop-async",
     "build-microdrop-async": "npm run-script --prefix ../microdrop-async build-dev",
-    "git-add": "git add package-lock.json && git add . && git commit",
-    "publish-pkg": "npm version patch && npm publish && git push origin master"
+    "git-add": "git add package-lock.json && git add -p . && git commit",
+    "publish-pkg": "npm version patch && npm publish && git push origin master",
+    "update-deps": "ncu -u @microdrop/async @microdrop/device-controller @microdrop/ui-plugin && npm install"
   },
   "author": "",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@microdrop/async": "0.2.8",
+    "@microdrop/async": "0.2.15",
     "backbone": "^1.3.3",
     "jquery": "^3.2.1",
     "keyboard-shortcut": "^1.2.0",
