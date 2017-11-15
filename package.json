@@ -1,6 +1,6 @@
 {
   "name": "@microdrop/device-controller",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "description": "Controller DMF device via controlboard",
   "main": "build/device-controller.common.js",
   "scripts": {
