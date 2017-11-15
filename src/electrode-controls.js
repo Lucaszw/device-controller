@@ -44,6 +44,8 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
   }
 
   drawElectrodes(elec) {
+    const LABEL = "ElectrodeControls::drawElectrodes";
+
     const objects = this.svgGroup.children;
     const onColor  = new THREE.Color(ON_COLOR);
     const offColor = new THREE.Color(OFF_COLOR);
@@ -55,7 +57,7 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
     }
 
     // Change currently on electrodes to on color
-    const currOn = _.filter(objects, (e)=>{return _.includes(elec, e.name)});
+    const currOn = _.filter(objects, (o)=>{return _.includes(elec, o.name)});
     for (const [i, obj] of currOn.entries()) {
       obj.fill.material.color = onColor;
     }
