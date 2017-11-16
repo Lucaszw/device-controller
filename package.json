@@ -5,18 +5,19 @@
   "main": "build/device-controller.common.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev-mode": "npm uninstall @microdrop/async && npm i ../microdrop-async",
+    "prod-mode": "npm uninstall @microdrop/async && npm i @microdrop/async",
     "build": "webpack",
-    "build-dev": "npm run-script build-microdrop-async && npm run-script link-packages && webpack",
-    "link-packages": "npm ln ../microdrop-async",
-    "build-microdrop-async": "npm run-script --prefix ../microdrop-async build-dev",
-    "update-deps": "ncu -ua @microdrop/async @microdrop/device-controller @microdrop/ui-plugin && npm install",
+    "build-dev": "npm run build-microdrop-async && npm run build",
+    "build-microdrop-async": "npm run --prefix ../microdrop-async build-dev",
+    "update-deps": "ncu -ua @microdrop/async && npm install",
     "git-add": "git add package-lock.json && git add -p . && git commit",
-    "publish-pkg": "npm run build && npm version patch && npm publish && git push origin master"
+    "publish-pkg": "npm run prod-mode && npm run build && npm version patch && npm publish && git push origin master"
   },
   "author": "",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@microdrop/async": "0.2.22",
+    "@microdrop/async": "file:../microdrop-async",
     "backbone": "^1.3.3",
     "jquery": "^3.2.1",
     "keyboard-shortcut": "^1.2.0",

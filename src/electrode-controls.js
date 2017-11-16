@@ -1,7 +1,6 @@
 const $ = require('jquery');
 const _ = require('lodash');
 const Backbone = require('backbone');
-const Key = require('keyboard-shortcut');
 const THREE = require('three');
 const {MeshLine, MeshLineMaterial} = require( 'three.meshline' );
 
@@ -31,16 +30,12 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
     this.renderer = renderer;
     this.container = container;
 
-    Key("left", () => this.move(DIRECTIONS.LEFT));
-    Key("right", () => this.move(DIRECTIONS.RIGHT));
-    Key("up", () => this.move(DIRECTIONS.UP));
-    Key("down", () => this.move(DIRECTIONS.DOWN));
-
     this.on("mousedown", this.mousedown.bind(this));
   }
 
   listen() {
     this.onStateMsg("electrodes-model", "active-electrodes", this.drawElectrodes.bind(this));
+    this.bindStateMsg("selected-electrode", "set-selected-electrode");
   }
 
   drawElectrodes(elec) {
@@ -130,6 +125,7 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
     this.selectedElectrode.outline.material = new MeshLineMaterial({
       color: new THREE.Color("black"), lineWidth: 0.2 });
     this.selectedElectrode = null;
+    this.trigger("set-selected-electrode", "null");
   }
 
   selectElectrode(electrodeId) {
@@ -147,11 +143,13 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
       color: new THREE.Color("red"), lineWidth: 0.2 });
 
     this.selectedElectrode = electrodeObject;
+    this.trigger("set-selected-electrode", electrodeId);
   }
 
   async mousedown(event) {
     /* Called when electrode object is clicked */
     if (event.origDomEvent.button != 0) return;
+    if (event.origDomEvent.altKey) return;
 
     // Await for mouse up event
     const mouseUp = () => {

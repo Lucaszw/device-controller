@@ -26,6 +26,7 @@ class RouteControls extends MicrodropAsync.MqttClient {
   listen() {
     this.onStateMsg("routes-model", "routes", this.renderRoutes.bind(this));
     this.bindPutMsg("routes-model", "route", "put-route");
+    this.bindStateMsg("selected-route", "set-selected-route");
   }
   get routes() {
     return _.cloneDeep(this.model.get("routes"));
@@ -121,6 +122,10 @@ class RouteControls extends MicrodropAsync.MqttClient {
         selectedRoutes.push(_.find(routes, {uuid}));
     }
 
+    // Write selected route to microdrop's state:
+    if (selectedRoutes.length < 1) return;
+    this.trigger("set-selected-route", selectedRoutes[0].uuid);
+
     // Turn selected routes yellow
     colorSelectedRoutes("yellow");
 
@@ -203,6 +208,9 @@ class RouteControls extends MicrodropAsync.MqttClient {
 
     if (path.length > 1) {
       this.trigger("put-route", localRoute);
+    } else {
+      if (e.origDomEvent.altKey)
+        this.selectRoute(e);
     }
   }
 }
