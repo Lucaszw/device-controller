@@ -16,7 +16,6 @@ const OFF_COLOR = "rgb(175, 175, 175)";
 const ON_COLOR = "rgb(245, 235, 164)";
 const SELECTED_COLOR = "rgb(120, 255, 168)";
 
-const microdrop = new MicrodropAsync();
 
 class ElectrodeControls extends MicrodropAsync.MqttClient {
   constructor(scene, camera, renderer, container=null) {
@@ -65,17 +64,20 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
   }
 
   async turnOnElectrode(id) {
+    const microdrop = new MicrodropAsync();
     const electrodeObject = this.electrodeObjects[id];
     electrodeObject.on = true;
     const electrodes = await microdrop.electrodes.toggleElectrode(id, true);
   }
   async turnOffElectrode(id) {
+    const microdrop = new MicrodropAsync();
     const electrodeObject = this.electrodeObjects[id];
     electrodeObject.on = false;
     const electrodes = await microdrop.electrodes.toggleElectrode(id, false);
   }
 
   async move(dir='right') {
+    const microdrop = new MicrodropAsync();
     if (!this.selectedElectrode) return;
     const id = this.selectedElectrode.name;
     const neighbours = await microdrop.device.getNeighbouringElectrodes(id);
@@ -162,6 +164,8 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
 
     // If event targets don't match, don't turn on electrode
     if (event.target.uuid != event2.target.uuid) return;
+
+    const microdrop = new MicrodropAsync();
 
     let activeElectrodes;
     try {
