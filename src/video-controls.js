@@ -9,7 +9,6 @@ require('threex-domevents')(THREE, THREEx);
 
 const ThreeHelpers = require('three-helpers.svg-paths-group')(THREE);
 const PlaneTransform = require('three.planetransform')(THREE);
-const MouseEventHandler = require('three-helpers.mouse-event-handler')(THREE);
 
 window.THREEx = THREEx;
 
@@ -43,15 +42,41 @@ class VideoControls {
     // scene.add(this.anchors.group);
 
     var plane = new PlaneTransform(scene, camera, renderer, {width, height});
+    this.plane = plane;
+
     updateFcts.push(function(delta, now){
       plane.update(delta, now);
     });
-    this.plane = plane;
+
+    this.planeReady().then((d)=> {
+      if (d.status != "failed")
+        plane.mesh.position.z = -0.5; // Ensure video plane is behind device
+    });
+
     this.svgGroup = svgGroup;
     this.scene = scene;
     // this.anchors = null;
     this.canvas = renderer.domElement;
     this.camera = camera;
+  }
+
+  planeReady(_interval=200, _timeout=5000) {
+    /* XXX: (Should move this check into three.planetransform) */
+    return new Promise((resolve, reject) => {
+      let interval;
+
+      interval = setInterval(()=> {
+        if (this.plane.mesh) {
+          clearInterval(interval);
+          resolve({status: "ready", plane: this.plane});
+        }
+      }, _interval);
+
+      setTimeout(()=> {
+        clearInterval(interval);
+        resolve({status: "failed", plane: this.plane});
+      }, _timeout);
+    });
   }
 
   adjustVideoAnchors() {
@@ -171,15 +196,6 @@ class Anchors {
                 [bbox.right, bbox.bottom],
                 [bbox.left, bbox.top],
                 [bbox.right, bbox.top]];
-    }
-
-    mouseEventHandler(canvas_element, camera) {
-        var args = {element: canvas_element,
-                    shapes: this.shapes,
-                    camera: camera};
-        // Create event manager to translate mouse movement and presses
-        // high-level shape events.
-        return new MouseEventHandler(args);
     }
 
     get positions() {

@@ -1,6 +1,7 @@
 const $ = require('jquery');
 const _ = require('lodash');
 const Backbone = require('backbone');
+const Colormap = require('colormap');
 const THREE = require('three');
 const {MeshLine, MeshLineMaterial} = require( 'three.meshline' );
 
@@ -16,7 +17,6 @@ const OFF_COLOR = "rgb(175, 175, 175)";
 const ON_COLOR = "rgb(245, 235, 164)";
 const SELECTED_COLOR = "rgb(120, 255, 168)";
 
-
 class ElectrodeControls extends MicrodropAsync.MqttClient {
   constructor(scene, camera, renderer, container=null) {
     super();
@@ -29,11 +29,15 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
     this.renderer = renderer;
     this.container = container;
 
+    this.overlays = [];
+
     this.on("mousedown", this.mousedown.bind(this));
+    this.layers = 1;
   }
 
   listen() {
     this.onStateMsg("electrodes-model", "active-electrodes", this.drawElectrodes.bind(this));
+    this.onStateMsg("device-model", "overlays", this.updateOverlays.bind(this));
     this.bindStateMsg("selected-electrode", "set-selected-electrode");
   }
 
@@ -57,35 +61,154 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
     }
   }
 
+  drawColorOverlay(overlay, group) {
+    let colors = Colormap({
+        colormap: overlay.colorMap,
+        nshades: overlay.colorRange,
+        format: 'hex',
+        alpha: 1
+    });
+
+    if (overlay.colorAll) {
+      for (const [i, obj] of group.children.entries()) {
+        const mesh = _.find(obj.children, ["geometry.type", "ExtrudeGeometry"]);
+        mesh.material.color = new THREE.Color(colors[overlay.colorRange/2]);
+      }
+    }
+
+    for (const [name, val] of Object.entries(overlay.electrodes)) {
+      const obj = _.find(group.children, {name});
+      const mesh = _.find(obj.children, ["geometry.type", "ExtrudeGeometry"]);
+      mesh.material.color = new THREE.Color(colors[val.intensity]);
+    }
+  }
+
+  drawShapeOverlay(overlay, group) {
+    const defaultSize = 3; // XXX: Should be mean or median electrode size
+    const defaultScale = 0.2; // XXX: Should get from scale
+
+    let colors = Colormap({
+        colormap: overlay.colorMap,
+        nshades: 10,
+        format: 'hex',
+        alpha: 1
+    });
+
+    // const radius = _.meanBy(group)
+    const addCircle = (obj, scale, numEdges) => {
+      const mesh = _.find(obj.children, ["geometry.type", "ExtrudeGeometry"]);
+      mesh.geometry.computeBoundingBox();
+      const size = mesh.geometry.boundingBox.getSize();
+      const radius = defaultSize * scale;
+
+      var geometry = new THREE.CircleGeometry( radius, overlay.numEdges );
+      var material = new THREE.MeshBasicMaterial( { color: colors[4] } );
+      var circle = new THREE.Mesh( geometry, material );
+      obj.add( circle );
+    };
+
+    if (overlay.shapeAll) {
+      for (const [i, obj] of group.children.entries()) {
+        addCircle(obj, defaultScale, overlay.numEdges);
+      }
+    }
+
+    for (const [name, val] of Object.entries(overlay.electrodes)) {
+      const obj = _.find(group.children, {name});
+      console.log({val});
+      addCircle(obj, val.scale, overlay.numEdges);
+    }
+  }
+
+  drawOverlay(overlay) {
+    if (!overlay.visible) return;
+
+    const group = this.svgGroup.clone();
+    group.traverse( function( node ) {
+
+      const type = _.get(node, "geometry.type");
+
+      if (type == "BufferGeometry") {
+        node.parent.remove(node);
+        return;
+      }
+
+      if( node.material ) {
+        node.material = node.material.clone();
+        node.material.opacity = 0.1;
+        node.material.transparent = true;
+      }
+    });
+
+    if (overlay.type == "colormap") {
+      this.drawColorOverlay(overlay, group);
+    } else if (overlay.type == "shapemap") {
+      this.drawShapeOverlay(overlay, group);
+    } else {
+      return;
+    }
+
+    group.name = overlay.name;
+    this.scene.add(group);
+    this.overlays.push(group);
+    group.position.z += 0.1*(this.overlays.length);
+  }
+
+  updateOverlays(payload) {
+    const LABEL = "<ElectrodeControls::updateOverlays>";
+    const scene = this.scene;
+
+    _.each(this.overlays, (o) => this.scene.remove(o));
+    this.overlays = [];
+
+    _.each(payload, this.drawOverlay.bind(this));
+
+    console.log(LABEL, {payload, scene});
+  }
+
   async loadSvg(f='default.svg') {
     var d = await SVGRenderer.init(f, this.scene, this.camera, this.renderer, this.container, this);
     this.electrodeObjects = d.objects;
     this.svgGroup = d.container;
+    this.scene.add(this.svgGroup);
   }
 
   async turnOnElectrode(id) {
-    const microdrop = new MicrodropAsync();
-    const electrodeObject = this.electrodeObjects[id];
-    electrodeObject.on = true;
-    const electrodes = await microdrop.electrodes.toggleElectrode(id, true);
+    try {
+      const microdrop = new MicrodropAsync();
+      const electrodeObject = this.electrodeObjects[id];
+      electrodeObject.on = true;
+      const electrodes = await microdrop.electrodes.toggleElectrode(id, true);
+    } catch (e) {
+      console.error(e);
+    }
   }
+
   async turnOffElectrode(id) {
-    const microdrop = new MicrodropAsync();
-    const electrodeObject = this.electrodeObjects[id];
-    electrodeObject.on = false;
-    const electrodes = await microdrop.electrodes.toggleElectrode(id, false);
+    try {
+      const microdrop = new MicrodropAsync();
+      const electrodeObject = this.electrodeObjects[id];
+      electrodeObject.on = false;
+      const electrodes = await microdrop.electrodes.toggleElectrode(id, false);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async move(dir='right') {
-    const microdrop = new MicrodropAsync();
-    if (!this.selectedElectrode) return;
-    const id = this.selectedElectrode.name;
-    const neighbours = await microdrop.device.getNeighbouringElectrodes(id);
-    const neighbour = neighbours[dir];
+    try {
+      const microdrop = new MicrodropAsync();
+      if (!this.selectedElectrode) return;
+      const id = this.selectedElectrode.name;
+      const neighbours = await microdrop.device.getNeighbouringElectrodes(id);
+      const neighbour = neighbours[dir];
 
-    if (!neighbour) return;
-    await this.turnOffElectrode(id);
-    this.selectElectrode(neighbour);
+      if (!neighbour) return;
+      await this.turnOffElectrode(id);
+      this.selectElectrode(neighbour);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   getNeighbours(electrodeId) {

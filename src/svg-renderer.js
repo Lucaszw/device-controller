@@ -171,7 +171,7 @@ const init = async (url='default.svg', scene, camera, renderer, container,
       addListener('mouseout');
     }
 
-    scene.add(svgGroup);
+    // scene.add(svgGroup);
 
     // Compute total width and height of grouped SVG objects and center
     const helper = new THREE.BoundingBoxHelper(svgGroup, 0xff0000);
