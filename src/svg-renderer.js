@@ -54,7 +54,6 @@ const ConstructScene = function(objects) {
 
   for (const [i,obj] of objects.entries()) {
     const shape = ShapeFromJSONObject(obj.shape);
-    const points = shape.createPointsGeometry();
     const geometry = new THREE.ExtrudeGeometry(shape, {bevelEnabled, amount});
     const fill = new THREE.Mesh(geometry, material);
     fill.name = obj.id;
@@ -107,8 +106,9 @@ const GenerateSvgGroup = async (url='default.svg') => {
 
   const svgGroup = new THREE.Group();
   for (const [i, obj] of objects.entries()) {
-    var shape = ShapeFromJSONObject(obj.shape);
-    // var points = new THREE.Geometry().setFromPoints(shape3D.extractPoints().shape);
+    var shape = ShapeFromJSONObject(obj.shape)
+
+    // var points = new THREE.Geometry().setFromPoints(shape.extractPoints().shape);
     var points = shape.createPointsGeometry();
 
     // Generate outline

@@ -115,7 +115,6 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
 
     for (const [name, val] of Object.entries(overlay.electrodes)) {
       const obj = _.find(group.children, {name});
-      console.log({val});
       addCircle(obj, val.scale, overlay.numEdges);
     }
   }
@@ -162,8 +161,6 @@ class ElectrodeControls extends MicrodropAsync.MqttClient {
     this.overlays = [];
 
     _.each(payload, this.drawOverlay.bind(this));
-
-    console.log(LABEL, {payload, scene});
   }
 
   async loadSvg(f='default.svg') {
