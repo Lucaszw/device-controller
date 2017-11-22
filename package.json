@@ -28,9 +28,8 @@
   },
   "devDependencies": {
     "@microdrop/buildutils": "0.0.2",
-    "express": "^4.16.2",
     "gulp": "^3.9.1",
-    "npm-link-recursive": "0.0.1"
+    "webpack": "^3.8.1"
   },
   "microdropDependencies": {
     "@microdrop/async": "microdrop-async"
