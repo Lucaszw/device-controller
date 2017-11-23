@@ -60,7 +60,7 @@ const createScene = async (_container=null) => {
   initRenderer();
 
   electrodeControls = new ElectrodeControls(scene, camera, renderer, container);
-  await electrodeControls.loadSvg('default.svg');
+  await electrodeControls.loadSvg('/default.svg');
   routeControls = new RouteControls(scene, camera, electrodeControls, container);
   videoControls = new VideoControls(scene, camera, renderer, updateFcts, electrodeControls.svgGroup);
   cameraControls.on("updateRequest", updateRequest.bind(this));

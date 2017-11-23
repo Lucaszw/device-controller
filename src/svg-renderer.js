@@ -76,7 +76,7 @@ const ShapeFromJSONObject = function(JSONObject) {
   return s;
 }
 
-const ConstructObjectsFromSVG = async function (url='default.svg') {
+const ConstructObjectsFromSVG = async function (url='/default.svg') {
   /* Construct JSON serializable geomatries from svg file */
   const two = new Two();
   const file = await ReadFile(url);
@@ -100,7 +100,7 @@ const ConstructObjectsFromSVG = async function (url='default.svg') {
   return objects;
 }
 
-const GenerateSvgGroup = async (url='default.svg') => {
+const GenerateSvgGroup = async (url='/default.svg') => {
   const objects = await ConstructObjectsFromSVG(url);
   const loader = new THREE.JSONLoader();
 
@@ -147,7 +147,7 @@ const GenerateSvgGroup = async (url='default.svg') => {
   return svgGroup;
 }
 
-const init = async (url='default.svg', scene, camera, renderer, container,
+const init = async (url='/default.svg', scene, camera, renderer, container,
   controller) => {
     const svgGroup = await GenerateSvgGroup(url);
     const domEvents = new THREEx.DomEvents(camera, renderer.domElement);
