@@ -77,7 +77,7 @@ const ShapeFromJSONObject = function(JSONObject) {
 }
 
 const ConstructObjectsFromSVG = async function (url='/default.svg') {
-  /* Construct JSON serializable geomatries from svg file */
+  /* Construct JSON serializable geometries from svg file */
   const two = new Two();
   const file = await ReadFile(url);
   const paths = $(file).find('path');
